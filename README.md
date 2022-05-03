@@ -132,6 +132,8 @@ pip3 install torch==1.9.0+cu111 torchvision==0.10.0+cu111 torchaudio==0.9.0 -f h
 
 ### Run FusED
 #### Check Fuzzing
+To check everything is set up correctly and FusED can run successfully, we first run one scenario.
+
 In `~/Docuements/self-driving-cars/FusED`,
 ```
 python ga_fuzzing.py --simulator carla_op --n_gen 1 --pop_size 1 --algorithm_name nsga2 --has_run_num 1 --episode_max_time 200 --only_run_unique_cases 0 --objective_weights 1 0 0 0 -1 -2 0 -m op --route_type 'Town06_Opt_forward'
@@ -141,9 +143,10 @@ Two windows should pop up with one showing the OpenPilot running in the CARLA si
 
 In the command line, the program should ends with `We have found (x) bugs in total.` before showing a series of "kill server" messages.
 
+Note since only one randomly sampled scenario is run here, it might not be a fusion error. To guarantee the finding of fusion errors, see the **Run Fuzzing** subsection next under **Detailed Description** where 500 scenarios have been run.
 
 ## Detailed Description
-The main result is the number of (distinct) fusion errors. Since the fuzzing process has randomness, the number won't be exactly the same across runs but it should be within the paper's reported range.
+The main results are the numbers of (distinct) fusion errors found using FusED and the baseline methods. Since the fuzzing process has randomness, the numbers won't be exactly the same across runs but they should be similar to the paper's reported ranges for each setting.
 
 ### Run Fuzzing
 In `~/Docuements/self-driving-cars/FusED`,
@@ -164,7 +167,7 @@ For `Random`, replace `--algorithm_name nsga2` with `--algorithm_name random`.
 The failure cases can be found in `~/Docuements/self-driving-cars/ADFuzz/run_results_op/<algorithm_name>/<route_type>/<route_type>/<m>/<folder_with_starting_time>/bugs`. In particular, under each subfolder, the folder `front` contains all the front camera images.
 
 
-### Rerun scenarios using the best sensor prediction to check fusion errors
+### Rerun collision scenarios using the best sensor fusion to analyze if they are fusion errors
 Move all the subfolders in `~/Docuements/self-driving-cars/ADFuzz/run_results_op/<algorithm_name>/<route_type>/<route_type>/<m>/<folder_with_starting_time>/bugs` to `~/openpilot/tools/sim/op_script/rerun_folder`, then in `~/openpilot/tools/sim/op_script`,
 ```
 python rerun_carla_op.py -p rerun_folder -m2 best_sensor -w 2.5
@@ -173,17 +176,16 @@ python rerun_carla_op.py -p rerun_folder -m2 best_sensor -w 2.5
 Depending on the CPU one uses and the number of collisions the fuzzing process has found, this process can take from 2 hours to 4 hours.
 
 #### Inspect the found fusion errors
-The rerun process of the fusion errors can be found in `~/openpilot/tools/sim/op_script/rerun_op/<algorithm_name>/<route_type>/<route_type>/<m>/<folder_with_starting_time>/non_bugs`. In particular, under each subfolder, the folder `front` contains all the front camera images.
+The rerun process of all the identified fusion errors during the rerun process can be found in `~/openpilot/tools/sim/op_script/rerun_op/<algorithm_name>/<route_type>/<route_type>/<m>/<folder_with_starting_time>/non_bugs`. They are considered fusion errors because after the replacement of the fusion method, they avoid the original collisions.
 
-
-### Check the number of (distinct) fusion errors
+#### Check the number of (distinct) fusion errors
 In `openpilot/tools/sim/op_script`,
 ```
 python trajectory_analysis.py -p rerun_folder -f <fusion folder>
 ```
-where `<fusion folder>` is the folder contains the fusion errors, i.e., `~/openpilot/tools/sim/op_script/rerun_op/<algorithm_name>/<route_type>/<route_type>/<m>/<folder_with_starting_time>/non_bugs`.
+where `<fusion folder>` should be set to the folder contains the fusion errors identified during the rerun process, i.e., `~/openpilot/tools/sim/op_script/rerun_op/<algorithm_name>/<route_type>/<route_type>/<m>/<folder_with_starting_time>/non_bugs`.
 
-The command line should ends with `cur X filtering: a -> b` where `a` represents the number of fusion errors found and `b` represents the number of distinct fusion errors found.
+The command line should show a line `cur X filtering: a -> b` where `a` represents the number of fusion errors found and `b` represents the number of distinct fusion errors found.
 
 
 ## Citing
@@ -209,4 +211,4 @@ If you use the project in your work, please consider citing it with:
 ```
 
 ## Reference
-This repo is partially built on top of [pymoo](https://github.com/msu-coinlab/pymoo)
+This repo uses [pymoo](https://github.com/msu-coinlab/pymoo) as the underlying framework for Multi-objective Optimization.
