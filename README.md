@@ -72,7 +72,7 @@ One should see the following:
 ```
 ~/.pyenv/shims/python
 ```
-Otherwise, one needs to follow the instruction by displayed after running
+Otherwise, one needs to follow the displayed instructions after running
 ```
 pyenv init
 ```
@@ -119,7 +119,7 @@ In `~/Docuements/self-driving-cars`,
 git clone https://github.com/FusionFuzz/FusED.git
 ```
 
-In `~/openpilot/tools/sim/op_script`,
+In `/Docuements/self-driving-cars/FusED`,
 ```
 pip3 install -r requirements.txt
 ```
